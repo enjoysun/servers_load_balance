@@ -1,0 +1,9 @@
+.git
+.idea
+zkdata/zoo1/data
+zkdata/zoo1/datalog
+zkdata/zoo2/data
+zkdata/zoo2/datalog
+zkdata/zoo3/data
+zkdata/zoo3/datalog
+db.sqlite3

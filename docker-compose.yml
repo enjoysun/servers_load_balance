@@ -1,0 +1,96 @@
+version: "3"
+services:
+  service_find:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: service_find
+    depends_on:
+      - redis
+      - zookeeper1
+      - zookeeper2
+      - zookeeper3
+    ports:
+      - "8000:8000"
+    links:
+      - redis
+      - zookeeper1
+      - zookeeper2
+      - zookeeper3
+    networks:
+      - webnet
+  # 配置关联redis镜像
+  redis:
+    # replace username/repo:tag with your name and image details
+    build:
+      context: ./redisconf
+      dockerfile: Dockerfile
+    container_name: service_redis
+    # 自定义配置文件挂载卷到容器
+    volumes:
+    - ./redisconf/conf/redis.conf:/usr/local/etc/redis/redis.conf
+    command: redis-server /usr/local/etc/redis/redis.conf
+    ports:
+      - "6378:6379"
+    networks:
+      - webnet
+  #配置zookeeper集群关联
+  zookeeper1:
+    image: zookeeper:3.4.11
+    restart: always
+    hostname: zoo1
+    container_name: zookeeper_1
+    #domainname:
+    ports:
+      - 2181:2181
+    volumes:
+      - ./zkdata/zoo1/data:/data
+      - ./zkdata/zoo1/datalog:/datalog
+    environment:
+      ZOO_MY_ID: 1
+      ZOO_SERVERS: server.1=0.0.0.0:2888:3888 server.2=zookeeper_2:2888:3888 server.3=zookeeper_3:2888:3888
+    networks:
+      - webnet
+
+  zookeeper2:
+    image: zookeeper:3.4.11
+    restart: always
+    hostname: zoo2
+    container_name: zookeeper_2
+    ports:
+      - 2182:2181
+    volumes:
+      - ./zkdata/zoo2/data:/data
+      - ./zkdata/zoo2/datalog:/datalog
+    depends_on:
+      - zookeeper1
+    environment:
+      ZOO_MY_ID: 2
+      ZOO_SERVERS: server.1=zookeeper_1:2888:3888 server.2=0.0.0.0:2888:3888 server.3=zookeeper_3:2888:3888
+    networks:
+      - webnet
+
+  zookeeper3:
+    image: zookeeper:3.4.11
+    restart: always
+    hostname: zoo3
+    container_name: zookeeper_3
+    ports:
+      - 2183:2181
+    volumes:
+      - ./zkdata/zoo3/data:/data
+      - ./zkdata/zoo3/datalog:/datalog
+    depends_on:
+      - zookeeper1
+      - zookeeper2
+    environment:
+      ZOO_MY_ID: 3
+      ZOO_SERVERS: server.1=zookeeper_1:2888:3888 server.2=zookeeper_2:2888:3888 server.3=0.0.0.0:2888:3888
+    networks:
+      - webnet
+
+# 设置网络全局
+networks:
+
+  webnet:
+    driver: bridge
