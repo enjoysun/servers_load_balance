@@ -19,8 +19,6 @@ class Round_Robin(object):
         cur[0] = (cur[0] + 1) % length
         return ret
 
-    7
-
     def weight_round_robin(self, servers, cur=[0]):
         weighted_list = []
         for k, v in servers.iteritems():
